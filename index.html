@@ -129,15 +129,22 @@
                 if (response.ok && data.token) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert("Pembayaran Sukses! Vote bertambah.");
+                            alert("Pembayaran Sukses! Terima kasih sudah mendukung.");
                             loadFinalis();
                         },
-                        onPending: function(result) { alert("Menunggu pembayaran."); },
-                        onError: function(result) { alert("Pembayaran gagal!"); },
-                        onClose: function() { alert("Pembayaran dibatalkan."); }
+                        onPending: function(result) { 
+                            alert("Menunggu pembayaran Anda."); 
+                            loadFinalis();
+                        },
+                        onError: function(result) { 
+                            alert("Pembayaran gagal! Silakan coba lagi."); 
+                        },
+                        onClose: function() { 
+                            // Refresh data secara otomatis saat jendela pop-up ditutup
+                            loadFinalis();
+                        }
                     });
                 } else {
-                    // Menampilkan detail error asli dari server
                     alert("Gagal dari Midtrans:\n" + (data.detail || data.error || 'Kesalahan tidak dikenal'));
                 }
             } catch (error) {
