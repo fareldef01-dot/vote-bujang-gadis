@@ -130,18 +130,17 @@
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
                             alert("Pembayaran Sukses! Terima kasih, dukungan Anda telah tercatat.");
-                            // Memuat ulang halaman web secara otomatis setelah sukses
-                            window.location.reload();
+                            // Memuat ulang data finalis secara instan tanpa error tunnel
+                            loadFinalis();
                         },
                         onPending: function(result) { 
                             alert("Menunggu pembayaran Anda."); 
-                            window.location.reload();
+                            loadFinalis();
                         },
                         onError: function(result) { 
                             alert("Pembayaran gagal! Silakan coba lagi."); 
                         },
                         onClose: function() { 
-                            // Memuat ulang data saat pop-up ditutup
                             loadFinalis();
                         }
                     });
