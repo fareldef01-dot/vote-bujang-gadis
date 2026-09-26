@@ -72,11 +72,13 @@ app.post('/api/bayar-vote', async (req, res) => {
     };
 
     try {
-        const transaction = await snap.createTransaction(parameter);
-        res.json({ token: transaction.token });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal membuat pembayaran' });
-    }
+    const transaction = await snap.createTransaction(parameter);
+    res.json({ token: transaction.token });
+} catch (error) {
+    console.error(error);
+    // Ini akan menampilkan pesan error asli dari Midtrans ke layar Anda
+    res.status(500).json({ error: 'Gagal membuat pembayaran', pesanAsli: error.message });
+}
 });
 
 // --- 5. API: WEBHOOK ---
