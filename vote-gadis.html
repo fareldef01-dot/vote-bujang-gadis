@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemilihan Gadis 2026</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #bae6fd;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-gradient); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--text-main); 
+            padding-bottom: 50px;
+            min-height: 100vh;
+        }
+
+        header { 
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); 
+            color: white;
+            text-align: center; 
+            padding: 30px 20px; 
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        header h1 { font-size: 1.5rem; margin: 0 0 5px; font-weight: 700; }
+        header p { font-size: 0.9rem; margin: 0; opacity: 0.9; }
+
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            padding: 0 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+        
+        .card { 
+            background: var(--card-bg); 
+            padding: 16px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); 
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid var(--border);
+        }
+        
+        .badge-no {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        img { 
+            width: 70px; 
+            height: 90px; 
+            object-fit: cover; 
+            border-radius: 10px; 
+            background: #e2e8f0;
+        }
+        
+        .info-section { flex-grow: 1; }
+        h3 { margin: 0 0 4px; color: var(--text-main); font-size: 1.05rem; font-weight: 700; }
+        .univ-text { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+        .vote-count { font-size: 0.95rem; font-weight: 700; color: var(--primary); }
+
+        .action-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        input { 
+            width: 50px; 
+            padding: 6px; 
+            text-align: center; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 14px; 
+            outline: none; 
+        }
+        input:focus { border-color: var(--primary); }
+        
+        button { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 13px; 
+            transition: background 0.2s; 
+        }
+        button:hover { background: var(--primary-hover); }
+        
+        #loading { font-size: 1rem; color: var(--text-muted); margin-top: 50px; text-align: center; font-weight: 500; }
+    </style>
+    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="CLIENT_KEY_ANDA"></script> 
+</head>
+<body>
+
+    <header>
+        <a href="/" class="back-btn">← Kembali</a>
+        <h1>Pemilihan Gadis 2026</h1>
+        <p>Dukung finalis Gadis favoritmu!</p>
+    </header>
+    
+    <div id="loading">Memuat daftar finalis Gadis... ⏳</div>
+    
+    <div class="container" id="finalis-container"></div>
+
+    <script>
+        async function loadFinalis() {
+            try {
+                const response = await fetch('/api/finalis');
+                const data = await response.json();
+                
+                const container = document.getElementById('finalis-container');
+                const loading = document.getElementById('loading');
+                
+                loading.style.display = 'none';
+                container.innerHTML = ''; 
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;">Belum ada data finalis Gadis.</p>';
+                    return;
+                }
+
+                data.forEach((finalis, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="badge-no">${finalis.nomor || (index + 1)}</div>
+                        <img src="${finalis.foto}" alt="${finalis.nama}">
+                        <div class="info-section">
+                            <h3>${finalis.nama}</h3>
+                            <div class="univ-text">Finalis Gadis</div>
+                            <div class="vote-count">${finalis.vote} Votes</div>
+                        </div>
+                        <div class="action-box">
+                            <input type="number" id="input-${finalis.id}" value="1" min="1">
+                            <button onclick="bayarVote('${finalis.id}')">Vote</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').innerHTML = 'Gagal memuat data. Silakan refresh.';
+            }
+        }
+
+        async function bayarVote(idFinalis) {
+            const jumlahVote = document.getElementById(`input-${idFinalis}`).value;
+            if (jumlahVote < 1) {
+                alert("Jumlah vote minimal 1");
+                return;
+            }
+
+            const namaVoter = prompt("Masukkan Nama Anda:") || "Pendukung Rahasia";
+
+            try {
+                const response = await fetch('/api/bayar-vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_finalis: idFinalis, jumlah_vote: parseInt(jumlahVote), nama_voter: namaVoter })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            alert("Pembayaran Sukses! Terima kasih atas dukungan Anda.");
+                            window.location.href = 'https://vote-bujang-gadis.vercel.app/vote-gadis.html';
+                        },
+                        onPending: function(result) { 
+                            alert("Menunggu pembayaran Anda."); 
+                            window.location.href = 'https://vote-bujang-gadis.vercel.app/vote-gadis.html';
+                        },
+                        onError: function(result) { 
+                            alert("Pembayaran gagal! Silakan coba lagi."); 
+                        },
+                        onClose: function() { 
+                            loadFinalis();
+                        }
+                    });
+                } else {
+                    alert("Gagal dari Midtrans:\n" + (data.detail || data.error || 'Kesalahan tidak dikenal'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Terjadi kesalahan sistem saat menghubungi server.");
+            }
+        }
+
+        loadFinalis();
+    </script>
+</body>
+</html>
