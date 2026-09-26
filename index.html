@@ -130,19 +130,19 @@
                 if (response.ok && data.token) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert("Pembayaran Sukses! Terima kasih atas dukungan Anda.");
-                            // Mengarahkan kembali secara paksa ke halaman utama dengan bersih
+                            alert("Pembayaran Sukses! Terima kasih, dukungan Anda telah tercatat.");
+                            // DIARAHKAN SECARA MUTLAK KE LINK VERCEL
                             window.location.href = 'https://vote-bujang-gadis.vercel.app';
                         },
                         onPending: function(result) { 
                             alert("Menunggu pembayaran Anda."); 
-                            window.location.href = '/';
+                            window.location.href = 'https://vote-bujang-gadis.vercel.app';
                         },
                         onError: function(result) { 
                             alert("Pembayaran gagal! Silakan coba lagi."); 
                         },
                         onClose: function() { 
-                            // Jika pop-up ditutup tanpa selesai bayar, muat ulang data saja
+                            // Saat pop-up ditutup, langsung muat ulang data di halaman Vercel
                             loadFinalis();
                         }
                     });
