@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
 const path = require('path');
-const mongoose = require('mongoose'); // Tambahan Mongoose untuk Database
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
@@ -10,7 +10,8 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // --- 1. KONEKSI KE DATABASE MONGODB ---
-const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farel12345@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; // PASTE LINK ANDA DI SINI
+// Link sudah dilengkapi dengan password Farel12345 dan nama database votingdb
+const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farel12345@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
 
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('Berhasil terhubung ke MongoDB!'))
@@ -27,26 +28,28 @@ const Finalis = mongoose.model('Finalis', finalisSchema);
 
 // Fungsi untuk mengisi data awal secara otomatis jika database masih kosong
 async function isiDataAwal() {
-    const jumlahData = await Finalis.countDocuments();
-    if (jumlahData === 0) {
-        await Finalis.insertMany([
-            { id: 'bujang_1', nama: 'Andi (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
-            { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
-            { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
-        ]);
-        console.log('Data awal finalis berhasil dimasukkan ke Database!');
+    try {
+        const jumlahData = await Finalis.countDocuments();
+        if (jumlahData === 0) {
+            await Finalis.insertMany([
+                { id: 'bujang_1', nama: 'Andi (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
+                { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
+                { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
+            ]);
+            console.log('Data awal finalis berhasil dimasukkan ke Database!');
+        }
+    } catch (err) {
+        console.error('Gagal mengisi data awal:', err);
     }
 }
 mongoose.connection.once('open', () => isiDataAwal());
 
-
 // --- 2. KONFIGURASI MIDTRANS ---
 const snap = new midtransClient.Snap({
     isProduction: false,
-    serverKey: 'Mid-server-x4V0sK8bbsKoYL6xpHRBFfY9' // Pastikan ini Server Key Anda
+    serverKey: 'Mid-server-x4V0sK8bbsKoYL6xpHRBFfY9'
 });
 let hargaPerVote = 5000;
-
 
 // --- RUTE UTAMA ---
 app.get('/', (req, res) => {
@@ -59,7 +62,8 @@ app.get('/api/finalis', async (req, res) => {
         const dataFinalis = await Finalis.find({});
         res.json(dataFinalis);
     } catch (error) {
-        res.status(500).json({ error: 'Gagal mengambil data' });
+        // Jika gagal, tampilkan pesan error aslinya agar mudah diperbaiki
+        res.status(500).json({ error: 'Gagal mengambil data', pesanAsli: error.message });
     }
 });
 
@@ -103,7 +107,6 @@ app.post('/api/webhook', async (req, res) => {
             if (fraudStatus == 'accept' || !fraudStatus) {
                 console.log(`Pembayaran Sukses! Menambahkan ${jumlahVote} vote ke ${idFinalis}`);
                 
-                // Cari finalis di database dan tambahkan votenya
                 await Finalis.findOneAndUpdate(
                     { id: idFinalis },
                     { $inc: { vote: jumlahVote } }
