@@ -1,12 +1,17 @@
-// File: server.js
 const express = require('express');
 const cors = require('cors');
 const midtransClient = require('midtrans-client');
+const path = require('path'); // Tambahan khusus untuk Vercel
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // Agar bisa membuka index.html
+app.use(express.static(__dirname));
+
+// --- RUTE UTAMA (Membantu Vercel menemukan file HTML Anda) ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // --- 1. KONFIGURASI MIDTRANS ---
 const snap = new midtransClient.Snap({
@@ -15,11 +20,10 @@ const snap = new midtransClient.Snap({
 });
 
 // --- 2. DATABASE SEMENTARA (Mock Database) ---
-// CARA MENAMBAH FINALIS: Cukup tambah baris baru di bawah dengan id yang berbeda
 let finalis = [
     { id: 'bujang_1', nama: 'Andi (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
     { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
-    { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' } 
+    { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
 ];
 
 let hargaPerVote = 5000; // Rp 5.000 per 1 Vote
@@ -96,3 +100,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server berjalan di port ${PORT}`);
 });
+
+// --- EXPORT UNTUK VERCEL (Wajib ada di paling bawah) ---
+module.exports = app;
