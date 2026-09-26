@@ -3,245 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pemilihan Bujang Gadis</title>
+    <title>Pemilihan Bujang & Gadis 2026</title>
     <style>
         :root {
-            --primary-color: #0284c7;
-            --primary-dark: #0369a1;
-            --bg-color: #f8fafc;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --primary-light: #e0f2fe;
+            --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --border: #bae6fd;
+            --shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.12), 0 8px 10px -6px rgba(2, 132, 199, 0.08);
         }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg-color); 
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg-gradient); 
             margin: 0; 
             padding: 0; 
             color: var(--text-main); 
-            padding-bottom: 80px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        /* Header / Banner Atas */
+        /* Modern Header */
         header { 
             background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); 
             color: white;
             text-align: center; 
-            padding: 25px 15px; 
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+            padding: 40px 20px; 
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2);
         }
-        header h1 { font-size: 1.5rem; margin: 0 0 5px; font-weight: 700; }
-        header p { font-size: 0.9rem; margin: 0; opacity: 0.9; }
-
-        /* Navigasi Tab (Leaderboard & Deskripsi) */
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        
+        header h1 { 
+            font-size: 1.8rem; 
+            margin: 0 0 10px; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
         }
-        .nav-tab-item {
-            padding: 14px 20px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-        .nav-tab-item.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
+        
+        header p { 
+            font-size: 1rem; 
+            margin: 0; 
+            opacity: 0.95; 
+            font-weight: 400;
         }
 
-        /* Container Kartu Finalis */
-        .container { 
-            max-width: 600px; 
-            margin: 20px auto; 
-            padding: 0 15px; 
+        /* Main Selection Area */
+        .main-container { 
+            max-width: 480px; 
+            width: 100%;
+            margin: -25px auto 30px; 
+            padding: 0 20px; 
+            box-sizing: border-box;
             display: flex; 
             flex-direction: column; 
-            gap: 15px; 
+            gap: 20px; 
+            z-index: 10;
         }
-        
-        .card { 
-            background: var(--card-bg); 
-            padding: 16px; 
-            border-radius: 14px; 
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); 
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-            border: 1px solid var(--border-color);
-        }
-        
-        .badge-no {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            min-width: 25px;
+
+        .category-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(186, 230, 253, 0.6);
+            border-radius: 20px;
+            padding: 25px;
             text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
         }
 
-        img { 
-            width: 75px; 
-            height: 95px; 
-            object-fit: cover; 
-            border-radius: 10px; 
-            background: #e2e8f0;
-        }
-        
-        .info-section {
-            flex-grow: 1;
-        }
-
-        h3 { margin: 0 0 4px; color: var(--text-main); font-size: 1.05rem; font-weight: 700; }
-        .univ-text { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.2; text-transform: uppercase; }
-        
-        .vote-count { font-size: 0.95rem; font-weight: 700; color: var(--primary-color); }
-
-        .action-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.2s ease;
         }
 
-        input { 
-            width: 50px; 
-            padding: 6px; 
-            text-align: center; 
-            border: 1px solid var(--border-color); 
-            border-radius: 6px; 
-            font-size: 14px; 
-            outline: none; 
+        .category-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px -10px rgba(2, 132, 199, 0.2);
+            border-color: var(--primary);
         }
-        input:focus { border-color: var(--primary-color); }
-        
-        button { 
-            background: var(--primary-color); 
-            color: white; 
-            border: none; 
-            padding: 8px 14px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 13px; 
-            transition: background 0.2s; 
-            white-space: nowrap;
+
+        .category-card:hover::before {
+            width: 10px;
         }
-        button:hover { background: var(--primary-dark); }
-        
-        #loading { font-size: 1rem; color: var(--text-muted); margin-top: 50px; text-align: center; font-weight: 500; }
+
+        .category-card h2 {
+            margin: 0 0 6px;
+            color: var(--text-main);
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .category-card p {
+            margin: 0 0 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-vote {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .category-card:hover .btn-vote {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: transparent;
+        }
     </style>
-    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="CLIENT_KEY_ANDA"></script> 
 </head>
 <body>
 
-    <header>
-        <h1>Pemilihan Bujang Gadis 2026</h1>
-        <p>Dukung finalis favoritmu sekarang juga!</p>
-    </header>
+    <div>
+        <header>
+            <h1>Bujang & Gadis 2026</h1>
+            <p>Pilih kategori dan berikan dukungan terbaikmu!</p>
+        </header>
 
-    <div class="nav-tabs">
-        <div class="nav-tab-item active">Leaderboard</div>
-        <div class="nav-tab-item" onclick="alert('Informasi: Setiap 1 Vote bernilai Rp 5.000.')">Deskripsi</div>
+        <div class="main-container">
+            <!-- Pilihan Kategori Bujang -->
+            <a href="/vote-bujang.html" class="category-card">
+                <h2>Pemilihan Bujang</h2>
+                <p>Dukung finalis Bujang favorit pilihan Anda</p>
+                <div class="btn-vote">Pilih Kategori Bujang</div>
+            </a>
+
+            <!-- Pilihan Kategori Gadis -->
+            <a href="/vote-gadis.html" class="category-card">
+                <h2>Pemilihan Gadis</h2>
+                <p>Dukung finalis Gadis favorit pilihan Anda</p>
+                <div class="btn-vote">Pilih Kategori Gadis</div>
+            </a>
+        </div>
     </div>
-    
-    <div id="loading">Memuat daftar finalis... ⏳</div>
-    
-    <div class="container" id="finalis-container"></div>
 
-    <script>
-        async function loadFinalis() {
-            try {
-                const response = await fetch('/api/finalis');
-                const data = await response.json();
-                
-                const container = document.getElementById('finalis-container');
-                const loading = document.getElementById('loading');
-                
-                loading.style.display = 'none';
-                container.innerHTML = ''; 
+    <footer>
+        &copy; 2026 Bujang Gadis Official. All rights reserved.
+    </footer>
 
-                if (data.length === 0) {
-                    container.innerHTML = '<p style="text-align:center;">Belum ada data finalis.</p>';
-                    return;
-                }
-
-                data.forEach((finalis, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div class="badge-no">${finalis.nomor || (index + 1)}</div>
-                        <img src="${finalis.foto}" alt="${finalis.nama}">
-                        <div class="info-section">
-                            <h3>${finalis.nama}</h3>
-                            <div class="univ-text">Bujang Gadis 2026</div>
-                            <div class="vote-count">${finalis.vote} Votes</div>
-                        </div>
-                        <div class="action-box">
-                            <input type="number" id="input-${finalis.id}" value="1" min="1">
-                            <button onclick="bayarVote('${finalis.id}')">Vote</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').innerHTML = 'Gagal memuat data. Silakan refresh.';
-            }
-        }
-
-        async function bayarVote(idFinalis) {
-            const jumlahVote = document.getElementById(`input-${idFinalis}`).value;
-            if (jumlahVote < 1) {
-                alert("Jumlah vote minimal 1");
-                return;
-            }
-
-            const namaVoter = prompt("Masukkan Nama Anda:") || "Pendukung Rahasia";
-
-            try {
-                const response = await fetch('/api/bayar-vote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_finalis: idFinalis, jumlah_vote: parseInt(jumlahVote), nama_voter: namaVoter })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.token) {
-                    window.snap.pay(data.token, {
-                        onSuccess: function(result) {
-                            alert("Pembayaran Sukses! Terima kasih atas dukungan Anda.");
-                            window.location.href = 'https://vote-bujang-gadis.vercel.app';
-                        },
-                        onPending: function(result) { 
-                            alert("Menunggu pembayaran Anda."); 
-                            window.location.href = 'https://vote-bujang-gadis.vercel.app';
-                        },
-                        onError: function(result) { 
-                            alert("Pembayaran gagal! Silakan coba lagi."); 
-                        },
-                        onClose: function() { 
-                            loadFinalis();
-                        }
-                    });
-                } else {
-                    alert("Gagal dari Midtrans:\n" + (data.detail || data.error || 'Kesalahan tidak dikenal'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert("Terjadi kesalahan sistem saat menghubungi server.");
-            }
-        }
-
-        loadFinalis();
-    </script>
 </body>
 </html>
