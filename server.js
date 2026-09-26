@@ -57,28 +57,43 @@ app.get('/api/finalis', async (req, res) => {
     }
 });
 
-// --- 4. API: PEMBAYARAN MIDTRANS ---
+// --- 4. API: PEMBAYARAN MIDTRANS (DIPERBARUI & AMAN) ---
 app.post('/api/bayar-vote', async (req, res) => {
-    const { id_finalis, jumlah_vote, nama_voter } = req.body;
-    const totalHarga = jumlah_vote * hargaPerVote;
-    const orderId = `VOTE-${id_finalis}-${Date.now()}`;
+    try {
+        await connectDB();
+        const { id_finalis, jumlah_vote, nama_voter } = req.body;
+        
+        if (!id_finalis || !jumlah_vote) {
+            return res.status(400).json({ error: 'Data vote tidak lengkap' });
+        }
 
-    let parameter = {
-        transaction_details: { order_id: orderId, gross_amount: totalHarga },
-        credit_card: { secure: true },
-        customer_details: { first_name: nama_voter, email: 'voter@example.com' },
-        custom_field1: id_finalis,
-        custom_field2: jumlah_vote.toString()
-    };
+        const totalHarga = parseInt(jumlah_vote) * hargaPerVote;
+        const orderId = `VOTE-${id_finalis}-${Date.now()}`;
 
-   try {
-    const transaction = await snap.createTransaction(parameter);
-    res.json({ token: transaction.token });
-} catch (error) {
-    console.error(error);
-    // Ini akan mengirim pesan error asli dari Midtrans ke layar Anda
-    res.status(500).json({ error: 'Gagal membuat pembayaran', detailError: error.message });
-}
+        let parameter = {
+            transaction_details: { 
+                order_id: orderId, 
+                gross_amount: totalHarga 
+            },
+            credit_card: { secure: true },
+            customer_details: { 
+                first_name: nama_voter || 'Pendukung', 
+                email: 'voter@example.com' 
+            },
+            custom_field1: id_finalis,
+            custom_field2: jumlah_vote.toString()
+        };
+
+        const transaction = await snap.createTransaction(parameter);
+        res.json({ token: transaction.token });
+        
+    } catch (error) {
+        console.error('Error Midtrans:', error.message);
+        res.status(500).json({ 
+            error: 'Gagal membuat pembayaran dari Midtrans', 
+            detail: error.message 
+        });
+    }
 });
 
 // --- 5. API: WEBHOOK ---
