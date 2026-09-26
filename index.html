@@ -5,69 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pemilihan Bujang Gadis</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); 
-            margin: 0; 
-            padding: 20px; 
-            color: #1e293b; 
-            min-height: 100vh;
-        }
-        header { padding: 30px 0; }
-        h1 { color: #0284c7; font-size: 2.5rem; margin-bottom: 10px; }
-        p.subtitle { color: #475569; font-size: 1.1rem; font-weight: 500; }
-        
-        .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; max-width: 1200px; margin: 20px auto; }
-        
-        .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.15); 
-            width: 280px; 
-            transition: transform 0.3s ease;
-            position: relative;
-        }
-        .card:hover { transform: translateY(-8px); }
-        
-        .badge-no {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: #0284c7;
-            color: white;
-            padding: 6px 12px;
-            font-weight: bold;
-            border-radius: 20px;
-            font-size: 0.9rem;
+        :root {
+            --primary-color: #0284c7;
+            --primary-dark: #0369a1;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
         }
 
-        img { width: 100%; height: 280px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 0; 
+            color: var(--text-main); 
+            padding-bottom: 80px;
+        }
+
+        /* Header / Banner Atas */
+        header { 
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); 
+            color: white;
+            text-align: center; 
+            padding: 25px 15px; 
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+        }
+        header h1 { font-size: 1.5rem; margin: 0 0 5px; font-weight: 700; }
+        header p { font-size: 0.9rem; margin: 0; opacity: 0.9; }
+
+        /* Navigasi Tab (Leaderboard & Deskripsi) */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .nav-tab-item {
+            padding: 14px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tab-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Container Kartu Finalis */
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            padding: 0 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
         
-        h3 { margin: 10px 0 5px; color: #0f172a; font-size: 1.25rem; }
-        .vote-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin: 15px 0; border: 1px solid #e2e8f0; }
-        .vote-count { font-size: 1.3rem; font-weight: bold; color: #0284c7; }
+        .card { 
+            background: var(--card-bg); 
+            padding: 16px; 
+            border-radius: 14px; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); 
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
         
-        input { width: 80%; padding: 10px; margin-bottom: 12px; text-align: center; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; outline: none; }
-        input:focus { border-color: #0284c7; }
+        .badge-no {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            min-width: 25px;
+            text-align: center;
+        }
+
+        img { 
+            width: 75px; 
+            height: 95px; 
+            object-fit: cover; 
+            border-radius: 10px; 
+            background: #e2e8f0;
+        }
         
-        button { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: background 0.2s; }
-        button:hover { background: #0369a1; }
+        .info-section {
+            flex-grow: 1;
+        }
+
+        h3 { margin: 0 0 4px; color: var(--text-main); font-size: 1.05rem; font-weight: 700; }
+        .univ-text { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.2; text-transform: uppercase; }
         
-        #loading { font-size: 1.2rem; color: #475569; margin-top: 50px; font-weight: 500; }
+        .vote-count { font-size: 0.95rem; font-weight: 700; color: var(--primary-color); }
+
+        .action-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        input { 
+            width: 50px; 
+            padding: 6px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            font-size: 14px; 
+            outline: none; 
+        }
+        input:focus { border-color: var(--primary-color); }
+        
+        button { 
+            background: var(--primary-color); 
+            color: white; 
+            border: none; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 13px; 
+            transition: background 0.2s; 
+            white-space: nowrap;
+        }
+        button:hover { background: var(--primary-dark); }
+        
+        #loading { font-size: 1rem; color: var(--text-muted); margin-top: 50px; text-align: center; font-weight: 500; }
     </style>
-    <!-- Ganti CLIENT_KEY_ANDA dengan Client Key Midtrans Sandbox Anda -->
     <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="CLIENT_KEY_ANDA"></script> 
 </head>
 <body>
 
     <header>
         <h1>Pemilihan Bujang Gadis 2026</h1>
-        <p class="subtitle">Dukung finalis favoritmu! 1 Vote = Rp 5.000</p>
+        <p>Dukung finalis favoritmu sekarang juga!</p>
     </header>
+
+    <div class="nav-tabs">
+        <div class="nav-tab-item active">Leaderboard</div>
+        <div class="nav-tab-item" onclick="alert('Informasi: Setiap 1 Vote bernilai Rp 5.000.')">Deskripsi</div>
+    </div>
     
-    <div id="loading">Memuat data finalis... Sabar ya ⏳</div>
+    <div id="loading">Memuat daftar finalis... ⏳</div>
     
     <div class="container" id="finalis-container"></div>
 
@@ -84,22 +169,25 @@
                 container.innerHTML = ''; 
 
                 if (data.length === 0) {
-                    container.innerHTML = '<p>Belum ada data finalis.</p>';
+                    container.innerHTML = '<p style="text-align:center;">Belum ada data finalis.</p>';
                     return;
                 }
 
-                data.forEach(finalis => {
+                data.forEach((finalis, index) => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <div class="badge-no">No. ${finalis.nomor || '-'}</div>
+                        <div class="badge-no">${finalis.nomor || (index + 1)}</div>
                         <img src="${finalis.foto}" alt="${finalis.nama}">
-                        <h3>${finalis.nama}</h3>
-                        <div class="vote-box">
-                            <span class="vote-count">${finalis.vote}</span> Vote
+                        <div class="info-section">
+                            <h3>${finalis.nama}</h3>
+                            <div class="univ-text">Bujang Gadis 2026</div>
+                            <div class="vote-count">${finalis.vote} Votes</div>
                         </div>
-                        <input type="number" id="input-${finalis.id}" value="1" min="1">
-                        <button onclick="bayarVote('${finalis.id}')">Beri Dukungan</button>
+                        <div class="action-box">
+                            <input type="number" id="input-${finalis.id}" value="1" min="1">
+                            <button onclick="bayarVote('${finalis.id}')">Vote</button>
+                        </div>
                     `;
                     container.appendChild(card);
                 });
@@ -130,8 +218,7 @@
                 if (response.ok && data.token) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert("Pembayaran Sukses! Terima kasih, dukungan Anda telah tercatat.");
-                            // DIARAHKAN SECARA MUTLAK KE LINK VERCEL
+                            alert("Pembayaran Sukses! Terima kasih atas dukungan Anda.");
                             window.location.href = 'https://vote-bujang-gadis.vercel.app';
                         },
                         onPending: function(result) { 
@@ -142,7 +229,6 @@
                             alert("Pembayaran gagal! Silakan coba lagi."); 
                         },
                         onClose: function() { 
-                            // Saat pop-up ditutup, langsung muat ulang data di halaman Vercel
                             loadFinalis();
                         }
                     });
