@@ -5,32 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - Bujang Gadis</title>
     <style>
-        body { font-family: sans-serif; background: #2c3e50; color: white; padding: 20px; text-align: center; }
-        .box { background: white; color: black; padding: 20px; border-radius: 10px; max-width: 500px; margin: 0 auto 30px; }
-        input { width: 90%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        button.btn-hapus { background: #e74c3c; margin-left: 10px; padding: 5px 10px; }
-        table { width: 100%; max-width: 600px; margin: 0 auto; background: white; color: black; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; padding: 20px; text-align: center; }
+        h1 { color: #38bdf8; margin-bottom: 5px; }
+        p { color: #94a3b8; margin-bottom: 30px; }
+        
+        .box { background: white; color: #1e293b; padding: 25px; border-radius: 12px; max-width: 450px; margin: 0 auto 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: left; }
+        .box h3 { color: #0284c7; margin-top: 0; text-align: center; }
+        
+        label { font-size: 0.9rem; font-weight: 600; color: #475569; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 15px; outline: none; }
+        input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.15); }
+        
+        button.btn-tambah { background: #0284c7; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; font-size: 16px; transition: background 0.2s; }
+        button.btn-tambah:hover { background: #0369a1; }
+        
+        table { width: 100%; max-width: 800px; margin: 0 auto; background: white; color: #1e293b; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 15px; text-align: left; }
+        th { background: #0284c7; color: white; font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+        
+        button.btn-hapus { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button.btn-hapus:hover { background: #dc2626; }
     </style>
 </head>
 <body>
 
-    <h1>Panel Admin Rahasia 🕵️‍♂️</h1>
+    <h1>Panel Admin Bujang Gadis 🕵️‍♂️</h1>
+    <p>Kelola data finalis dengan mudah secara real-time</p>
     
     <div class="box">
-        <h3>Tambah Finalis Baru</h3>
-        <input type="text" id="inputId" placeholder="ID Finalis (contoh: bujang_3)">
-        <input type="text" id="inputNama" placeholder="Nama Lengkap (contoh: Budi (Bujang))">
-        <input type="text" id="inputFoto" placeholder="Link Foto (contoh: https://imgur.com/foto.jpg)">
-        <br>
-        <button onclick="tambahFinalis()">+ Tambah ke Database</button>
+        <h3>+ Tambah Finalis Baru</h3>
+        <label>ID Unik (tanpa spasi, misal: bujang_3):</label>
+        <input type="text" id="inputId" placeholder="bujang_3">
+        
+        <label>Nomor Urut (misal: 01, 02):</label>
+        <input type="text" id="inputNomor" placeholder="01">
+        
+        <label>Nama Lengkap:</label>
+        <input type="text" id="inputNama" placeholder="Nama & Gelar">
+        
+        <label>Link Foto (Direct Link ImgBB/Postimages):</label>
+        <input type="text" id="inputFoto" placeholder="https://...">
+        
+        <button class="btn-tambah" onclick="tambahFinalis()">Simpan Finalis</button>
     </div>
 
-    <h3>Daftar Finalis Saat Ini</h3>
+    <h3 style="color: #38bdf8;">Daftar Finalis di Database</h3>
     <table>
         <thead>
             <tr>
+                <th>No</th>
                 <th>ID</th>
                 <th>Nama</th>
                 <th>Vote</th>
@@ -38,7 +62,7 @@
             </tr>
         </thead>
         <tbody id="tabelFinalis">
-            <!-- Data akan masuk ke sini -->
+            <!-- Data terisi otomatis -->
         </tbody>
     </table>
 
@@ -49,12 +73,18 @@
             const tabel = document.getElementById('tabelFinalis');
             tabel.innerHTML = '';
             
+            if(data.length === 0) {
+                tabel.innerHTML = `<tr><td colspan="5" style="text-align:center;">Belum ada data finalis.</td></tr>`;
+                return;
+            }
+
             data.forEach(f => {
                 tabel.innerHTML += `
                     <tr>
-                        <td>${f.id}</td>
+                        <td><b>${f.nomor || '-'}</b></td>
+                        <td><code>${f.id}</code></td>
                         <td>${f.nama}</td>
-                        <td>${f.vote}</td>
+                        <td><b>${f.vote}</b> Vote</td>
                         <td><button class="btn-hapus" onclick="hapusFinalis('${f.id}')">Hapus</button></td>
                     </tr>
                 `;
@@ -63,29 +93,43 @@
 
         async function tambahFinalis() {
             const id = document.getElementById('inputId').value;
+            const nomor = document.getElementById('inputNomor').value;
             const nama = document.getElementById('inputNama').value;
             const foto = document.getElementById('inputFoto').value;
 
-            if(!id || !nama || !foto) return alert("Semua kolom wajib diisi!");
+            if(!id || !nomor || !nama || !foto) return alert("Semua kolom wajib diisi!");
 
-            await fetch('/api/admin/tambah', {
+            const res = await fetch('/api/admin/tambah', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, nama, foto })
+                body: JSON.stringify({ id, nomor, nama, foto })
             });
-            alert("Berhasil ditambahkan!");
-            muatData(); // Refresh tabel
+
+            if(res.ok) {
+                alert("Finalis berhasil ditambahkan!");
+                document.getElementById('inputId').value = '';
+                document.getElementById('inputNomor').value = '';
+                document.getElementById('inputNama').value = '';
+                document.getElementById('inputFoto').value = '';
+                muatData();
+            } else {
+                alert("Gagal menambah finalis.");
+            }
         }
 
         async function hapusFinalis(id) {
             if(!confirm(`Yakin ingin menghapus ${id}?`)) return;
 
-            await fetch(`/api/admin/hapus/${id}`, { method: 'DELETE' });
-            alert("Berhasil dihapus!");
-            muatData(); // Refresh tabel
+            const res = await fetch(`/api/admin/hapus/${id}`, { method: 'DELETE' });
+            if(res.ok) {
+                alert("Finalis berhasil dihapus!");
+                muatData();
+            } else {
+                alert("Gagal menghapus.");
+            }
         }
 
-        muatData(); // Muat otomatis saat dibuka
+        muatData();
     </script>
 </body>
 </html>

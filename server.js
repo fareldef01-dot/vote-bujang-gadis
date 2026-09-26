@@ -9,11 +9,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// --- 1. KONEKSI DATABASE KHUSUS VERCEL ---
+// --- 1. KONEKSI DATABASE ---
 const MONGODB_URI = 'mongodb+srv://adminvoting:Password123@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
 
 const finalisSchema = new mongoose.Schema({
     id: String,
+    nomor: String,
     nama: String,
     vote: Number,
     foto: String
@@ -23,6 +24,15 @@ const Finalis = mongoose.models.Finalis || mongoose.model('Finalis', finalisSche
 const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) return;
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+    
+    const jumlahData = await Finalis.countDocuments();
+    if (jumlahData === 0) {
+        await Finalis.insertMany([
+            { id: 'bujang_1', nomor: '01', nama: 'Andi Pratama (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
+            { id: 'gadis_1', nomor: '02', nama: 'Siti Rahma (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
+            { id: 'bujang_2', nomor: '03', nama: 'Rian Hidayat (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
+        ]);
+    }
 };
 
 // --- 2. KONFIGURASI MIDTRANS ---
@@ -34,9 +44,9 @@ let hargaPerVote = 5000;
 
 // --- RUTE HALAMAN ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html'))); // Rute untuk Admin
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// --- 3. API: Mengambil Data Finalis ---
+// --- 3. API: AMBIL DATA ---
 app.get('/api/finalis', async (req, res) => {
     try {
         await connectDB();
@@ -47,7 +57,7 @@ app.get('/api/finalis', async (req, res) => {
     }
 });
 
-// --- 4. API: Membuat Transaksi Pembayaran ---
+// --- 4. API: PEMBAYARAN MIDTRANS ---
 app.post('/api/bayar-vote', async (req, res) => {
     const { id_finalis, jumlah_vote, nama_voter } = req.body;
     const totalHarga = jumlah_vote * hargaPerVote;
@@ -69,7 +79,7 @@ app.post('/api/bayar-vote', async (req, res) => {
     }
 });
 
-// --- 5. API: Webhook Midtrans ---
+// --- 5. API: WEBHOOK ---
 app.post('/api/webhook', async (req, res) => {
     const notif = req.body;
     try {
@@ -87,27 +97,27 @@ app.post('/api/webhook', async (req, res) => {
     }
 });
 
-// --- 6. API: ADMIN TAMBAH FINALIS ---
+// --- 6. API: ADMIN TAMBAH ---
 app.post('/api/admin/tambah', async (req, res) => {
     try {
         await connectDB();
-        const { id, nama, foto } = req.body;
-        const finalisBaru = new Finalis({ id, nama, vote: 0, foto });
+        const { id, nomor, nama, foto } = req.body;
+        const finalisBaru = new Finalis({ id, nomor, nama, vote: 0, foto });
         await finalisBaru.save();
-        res.json({ message: 'Sukses menambah finalis' });
+        res.json({ message: 'Sukses' });
     } catch (error) {
-        res.status(500).json({ error: 'Gagal menambah' });
+        res.status(500).json({ error: 'Gagal' });
     }
 });
 
-// --- 7. API: ADMIN HAPUS FINALIS ---
+// --- 7. API: ADMIN HAPUS ---
 app.delete('/api/admin/hapus/:id', async (req, res) => {
     try {
         await connectDB();
         await Finalis.findOneAndDelete({ id: req.params.id });
-        res.json({ message: 'Sukses menghapus finalis' });
+        res.json({ message: 'Sukses' });
     } catch (error) {
-        res.status(500).json({ error: 'Gagal menghapus' });
+        res.status(500).json({ error: 'Gagal' });
     }
 });
 
