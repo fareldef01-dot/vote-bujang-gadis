@@ -57,6 +57,7 @@
         
         #loading { font-size: 1.2rem; color: #475569; margin-top: 50px; font-weight: 500; }
     </style>
+    <!-- Ganti CLIENT_KEY_ANDA dengan Client Key Midtrans Sandbox Anda -->
     <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="CLIENT_KEY_ANDA"></script> 
 </head>
 <body>
@@ -129,18 +130,19 @@
                 if (response.ok && data.token) {
                     window.snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert("Pembayaran Sukses! Terima kasih, dukungan Anda telah tercatat.");
-                            // Memuat ulang data finalis secara instan tanpa error tunnel
-                            loadFinalis();
+                            alert("Pembayaran Sukses! Terima kasih atas dukungan Anda.");
+                            // Mengarahkan kembali secara paksa ke halaman utama dengan bersih
+                            window.location.href = '/';
                         },
                         onPending: function(result) { 
                             alert("Menunggu pembayaran Anda."); 
-                            loadFinalis();
+                            window.location.href = '/';
                         },
                         onError: function(result) { 
                             alert("Pembayaran gagal! Silakan coba lagi."); 
                         },
                         onClose: function() { 
+                            // Jika pop-up ditutup tanpa selesai bayar, muat ulang data saja
                             loadFinalis();
                         }
                     });
