@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // --- 1. KONEKSI KE DATABASE MONGODB ---
-const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farreldef12345@cluster0.fshemrp.mongodb.net/?appName=Cluster0'; // PASTE LINK ANDA DI SINI
+const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farel12345@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; // PASTE LINK ANDA DI SINI
 
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('Berhasil terhubung ke MongoDB!'))
