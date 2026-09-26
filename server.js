@@ -9,40 +9,35 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// --- 1. KONEKSI KE DATABASE MONGODB ---
-// Link sudah dilengkapi dengan password Farel12345 dan nama database votingdb
+// --- 1. KONEKSI DATABASE KHUSUS VERCEL (SERVERLESS) ---
 const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farel12345@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Berhasil terhubung ke MongoDB!'))
-    .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
-
-// Membuat Cetakan Data (Schema) untuk Finalis
+// Cetakan Data
 const finalisSchema = new mongoose.Schema({
     id: String,
     nama: String,
     vote: Number,
     foto: String
 });
-const Finalis = mongoose.model('Finalis', finalisSchema);
+const Finalis = mongoose.models.Finalis || mongoose.model('Finalis', finalisSchema);
 
-// Fungsi untuk mengisi data awal secara otomatis jika database masih kosong
-async function isiDataAwal() {
-    try {
-        const jumlahData = await Finalis.countDocuments();
-        if (jumlahData === 0) {
-            await Finalis.insertMany([
-                { id: 'bujang_1', nama: 'Andi (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
-                { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
-                { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
-            ]);
-            console.log('Data awal finalis berhasil dimasukkan ke Database!');
-        }
-    } catch (err) {
-        console.error('Gagal mengisi data awal:', err);
+// Fungsi jaminan koneksi agar tidak Time Out di Vercel
+const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) return; // Jika sudah konek, lewati
+    
+    console.log('Menghubungkan ke MongoDB...');
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+    
+    // Isi data awal jika masih kosong
+    const jumlahData = await Finalis.countDocuments();
+    if (jumlahData === 0) {
+        await Finalis.insertMany([
+            { id: 'bujang_1', nama: 'Andi (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
+            { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
+            { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
+        ]);
     }
-}
-mongoose.connection.once('open', () => isiDataAwal());
+};
 
 // --- 2. KONFIGURASI MIDTRANS ---
 const snap = new midtransClient.Snap({
@@ -56,13 +51,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// --- 3. API: Mengambil Data Finalis dari Database ---
+// --- 3. API: Mengambil Data Finalis ---
 app.get('/api/finalis', async (req, res) => {
     try {
+        await connectDB(); // WAJIB BANGUNKAN DATABASE DULU
         const dataFinalis = await Finalis.find({});
         res.json(dataFinalis);
     } catch (error) {
-        // Jika gagal, tampilkan pesan error aslinya agar mudah diperbaiki
         res.status(500).json({ error: 'Gagal mengambil data', pesanAsli: error.message });
     }
 });
@@ -70,7 +65,6 @@ app.get('/api/finalis', async (req, res) => {
 // --- 4. API: Membuat Transaksi Pembayaran ---
 app.post('/api/bayar-vote', async (req, res) => {
     const { id_finalis, jumlah_vote, nama_voter } = req.body;
-    
     const totalHarga = jumlah_vote * hargaPerVote;
     const orderId = `VOTE-${id_finalis}-${Date.now()}`;
 
@@ -91,22 +85,19 @@ app.post('/api/bayar-vote', async (req, res) => {
     }
 });
 
-// --- 5. API: Webhook (Menerima Notifikasi & Menambah Vote di Database) ---
+// --- 5. API: Webhook (Menerima Notifikasi) ---
 app.post('/api/webhook', async (req, res) => {
     const notif = req.body;
-
     try {
+        await connectDB(); // WAJIB BANGUNKAN DATABASE DULU
         const statusResponse = await snap.transaction.notification(notif);
         const transactionStatus = statusResponse.transaction_status;
         const fraudStatus = statusResponse.fraud_status;
-        
         const idFinalis = statusResponse.custom_field1;
         const jumlahVote = parseInt(statusResponse.custom_field2);
 
         if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
             if (fraudStatus == 'accept' || !fraudStatus) {
-                console.log(`Pembayaran Sukses! Menambahkan ${jumlahVote} vote ke ${idFinalis}`);
-                
                 await Finalis.findOneAndUpdate(
                     { id: idFinalis },
                     { $inc: { vote: jumlahVote } }
