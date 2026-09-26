@@ -1,147 +1,179 @@
 const express = require('express');
-const cors = require('cors');
+const mongoose = require('mongoose');
 const midtransClient = require('midtrans-client');
 const path = require('path');
-const mongoose = require('mongoose');
 
 const app = express();
-app.use(cors());
+
+// Middleware penting untuk membaca JSON dan file statis (HTML, CSS, dll)
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname)));
 
-// --- 1. KONEKSI DATABASE ---
-const MONGODB_URI = 'mongodb+srv://adminvoting:Password123@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
+// Konfigurasi MongoDB Atlas (Ganti dengan URI database Anda jika perlu)
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://username:password@cluster.mongodb.net/db_voting?retryWrites=true&w=majority";
 
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log("Berhasil terhubung ke MongoDB Atlas");
+}).catch(err => {
+    console.error("Koneksi MongoDB gagal:", err);
+});
+
+// Schema & Model Finalis
 const finalisSchema = new mongoose.Schema({
-    id: String,
-    nomor: String,
-    nama: String,
-    vote: Number,
-    foto: String
+    nama: { type: String, required: true },
+    nomor: { type: String, required: true },
+    kategori: { type: String, enum: ['bujang', 'gadis'], required: true }, // 'bujang' atau 'gadis'
+    foto: { type: String, required: true },
+    vote: { type: Number, default: 0 }
 });
-const Finalis = mongoose.models.Finalis || mongoose.model('Finalis', finalisSchema);
 
-const connectDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-    
-    const jumlahData = await Finalis.countDocuments();
-    if (jumlahData === 0) {
-        await Finalis.insertMany([
-            { id: 'bujang_1', nomor: '01', nama: 'Andi Pratama (Bujang)', vote: 10, foto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
-            { id: 'gadis_1', nomor: '02', nama: 'Siti Rahma (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
-            { id: 'bujang_2', nomor: '03', nama: 'Rian Hidayat (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
-        ]);
-    }
-};
+const Finalis = mongoose.model('Finalis', finalisSchema);
 
-// --- 2. KONFIGURASI MIDTRANS ---
-const snap = new midtransClient.Snap({
-    isProduction: false,
-    serverKey: 'Mid-server-x4V0sK8bbsKoYL6xpHRBFfY9'
+// Schema Riwayat Transaksi
+const transaksiSchema = new mongoose.Schema({
+    order_id: { type: String, required: true, unique: true },
+    id_finalis: { type: mongoose.Schema.Types.ObjectId, ref: 'Finalis' },
+    nama_voter: String,
+    jumlah_vote: Number,
+    gross_amount: Number,
+    status: { type: String, default: 'pending' },
+    tanggal: { type: Date, default: Date.now }
 });
-let hargaPerVote = 5000;
 
-// --- RUTE HALAMAN ---
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+const Transaksi = mongoose.model('Transaksi', transaksiSchema);
 
-// --- 3. API: AMBIL DATA ---
+// Inisialisasi Midtrans Snap API (Ganti dengan Server Key Anda)
+let snap = new midtransClient.Snap({
+    isProduction: false, // Ubah ke true jika sudah mode live/production
+    serverKey: process.env.MIDTRANS_SERVER_KEY || 'SB-Mid-server-KODE_SERVER_KEY_ANDA',
+    clientKey: process.env.MIDTRANS_CLIENT_KEY || 'SB-Mid-client-KODE_CLIENT_KEY_ANDA'
+});
+
+// API: Mendapatkan daftar semua finalis (bisa difilter berdasarkan kategori ?kategori=bujang/gadis)
 app.get('/api/finalis', async (req, res) => {
     try {
-        await connectDB();
-        const dataFinalis = await Finalis.find({});
-        res.json(dataFinalis);
+        const { kategori } = req.query;
+        let query = {};
+        if (kategori) {
+            query.kategori = kategori;
+        }
+        const data = await Finalis.find(query);
+        // Format mapping agar "_id" menjadi "id" di sisi frontend
+        const formattedData = data.map(item => ({
+            id: item._id,
+            nama: item.nama,
+            nomor: item.nomor,
+            kategori: item.kategori,
+            foto: item.foto,
+            vote: item.vote
+        }));
+        res.json(formattedData);
     } catch (error) {
-        res.status(500).json({ error: 'Gagal mengambil data' });
+        console.error('Error get finalis:', error);
+        res.status(500).json({ error: 'Gagal mengambil data finalis' });
     }
 });
 
-// --- 4. API: PEMBAYARAN MIDTRANS (DENGAN DIAGNOSIS ERROR) ---
+// API: Membuat transaksi pembayaran vote via Midtrans
 app.post('/api/bayar-vote', async (req, res) => {
     try {
-        await connectDB();
         const { id_finalis, jumlah_vote, nama_voter } = req.body;
         
-        if (!id_finalis || !jumlah_vote) {
-            return res.status(400).json({ error: 'Data vote tidak lengkap' });
+        const finalis = await Finalis.findById(id_finalis);
+        if (!finalis) {
+            return res.status(404).json({ error: 'Finalis tidak ditemukan' });
         }
 
-        const totalHarga = parseInt(jumlah_vote) * hargaPerVote;
-// Membersihkan ID dari karakter khusus agar hanya huruf, angka, dan strip (-)
-const cleanId = id_finalis.replace(/[^a-zA-Z0-9]/g, '');
-const orderId = `VOTE-${cleanId}-${Date.now()}`;
+        const hargaPerVote = 5000;
+        const totalHarga = jumlah_vote * hargaPerVote;
 
-        let parameter = {
-            transaction_details: { 
-                order_id: orderId, 
-                gross_amount: totalHarga 
+        // Pembersihan order_id sesuai standar aturan karakter alfanumerik & simbol yang diizinkan Midtrans
+        const rawOrderId = `VOTE-${id_finalis}-${Date.now()}`;
+        const cleanOrderId = rawOrderId.replace(/[^a-zA-Z0-9\-_.~]/g, '_');
+
+        const parameter = {
+            transaction_details: {
+                order_id: cleanOrderId,
+                gross_amount: totalHarga
             },
-            credit_card: { secure: true },
-            customer_details: { 
-                first_name: nama_voter || 'Pendukung', 
-                email: 'voter@example.com' 
+            customer_details: {
+                first_name: nama_voter || 'Pendukung'
             },
-            custom_field1: id_finalis,
-            custom_field2: jumlah_vote.toString()
+            item_details: [{
+                id: finalis._id.toString(),
+                price: hargaPerVote,
+                quantity: jumlah_vote,
+                name: `Vote ${finalis.nama} (${jumlah_vote}x)`
+            }]
         };
 
-        const transaction = await snap.createTransaction(parameter);
-        res.json({ token: transaction.token });
-        
-    } catch (error) {
-        console.error('Error Midtrans:', error);
-        // Mengirim detail error asli agar tampil di layar
-        const errorDetail = error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message;
-        res.status(500).json({ 
-            error: 'Gagal dari Midtrans', 
-            detail: errorDetail 
+        // Simpan transaksi status pending ke database
+        await Transaksi.create({
+            order_id: cleanOrderId,
+            id_finalis: finalis._id,
+            nama_voter: nama_voter || 'Pendukung',
+            jumlah_vote: parseInt(jumlah_vote),
+            gross_amount: totalHarga,
+            status: 'pending'
         });
+
+        // Request token snap ke Midtrans
+        const transaction = await snap.createTransaction(parameter);
+        res.json({ token: transaction.token, order_id: cleanOrderId });
+
+    } catch (error) {
+        console.error('Midtrans Error:', error.ApiResponse || error);
+        res.status(500).json({ error: 'Gagal membuat transaksi pembayaran', detail: error.message });
     }
 });
 
-// --- 5. API: WEBHOOK ---
-app.post('/api/webhook', async (req, res) => {
-    const notif = req.body;
+// API: Webhook / Notification Handler dari Midtrans setelah pembayaran selesai
+app.post('/api/midtrans-notification', async (req, res) => {
     try {
-        await connectDB();
-        const statusResponse = await snap.transaction.notification(notif);
-        if ((statusResponse.transaction_status == 'capture' || statusResponse.transaction_status == 'settlement') && (statusResponse.fraud_status == 'accept' || !statusResponse.fraud_status)) {
-            await Finalis.findOneAndUpdate(
-                { id: statusResponse.custom_field1 },
-                { $inc: { vote: parseInt(statusResponse.custom_field2) } }
-            );
+        const notificationStatus = await snap.transaction.notification(req.body);
+        const orderId = notificationStatus.order_id;
+        const transactionStatus = notificationStatus.transaction_status;
+        const fraudStatus = notificationStatus.fraud_status;
+
+        const transaksi = await Transaksi.findOne({ order_id: orderId });
+        if (!transaksi) {
+            return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
         }
-        res.status(200).send('OK');
+
+        if (transactionStatus == 'capture') {
+            if (fraudStatus == 'challenge') {
+                transaksi.status = 'challenge';
+            } else if (fraudStatus == 'accept') {
+                transaksi.status = 'success';
+                await tambahVoteFinalis(transaksi.id_finalis, transaksi.jumlah_vote);
+            }
+        } else if (transactionStatus == 'settlement') {
+            transaksi.status = 'success';
+            await tambahVoteFinalis(transaksi.id_finalis, transaksi.jumlah_vote);
+        } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
+            transaksi.status = 'failed';
+        }
+
+        await transaksi.save();
+        res.status(200).json({ status: 'OK' });
     } catch (error) {
-        res.status(500).send('Error');
+        console.error('Notification error:', error);
+        res.status(500).json({ error: 'Gagal memproses notifikasi' });
     }
 });
 
-// --- 6. API: ADMIN TAMBAH ---
-app.post('/api/admin/tambah', async (req, res) => {
-    try {
-        await connectDB();
-        const { id, nomor, nama, foto } = req.body;
-        const finalisBaru = new Finalis({ id, nomor, nama, vote: 0, foto });
-        await finalisBaru.save();
-        res.json({ message: 'Sukses' });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal' });
-    }
-});
+async function tambahVoteFinalis(idFinalis, jumlah) {
+    await Finalis.findByIdAndUpdate(idFinalis, {
+        $inc: { vote: jumlah }
+    });
+}
 
-// --- 7. API: ADMIN HAPUS ---
-app.delete('/api/admin/hapus/:id', async (req, res) => {
-    try {
-        await connectDB();
-        await Finalis.findOneAndDelete({ id: req.params.id });
-        res.json({ message: 'Sukses' });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal' });
-    }
-});
-
+// Menjalankan Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
-module.exports = app;
+app.listen(PORT, () => {
+    console.log(`Server berjalan di port ${PORT}`);
+});
