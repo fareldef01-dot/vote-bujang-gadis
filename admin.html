@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Bujang Gadis</title>
+    <style>
+        body { font-family: sans-serif; background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .box { background: white; color: black; padding: 20px; border-radius: 10px; max-width: 500px; margin: 0 auto 30px; }
+        input { width: 90%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        button.btn-hapus { background: #e74c3c; margin-left: 10px; padding: 5px 10px; }
+        table { width: 100%; max-width: 600px; margin: 0 auto; background: white; color: black; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel Admin Rahasia 🕵️‍♂️</h1>
+    
+    <div class="box">
+        <h3>Tambah Finalis Baru</h3>
+        <input type="text" id="inputId" placeholder="ID Finalis (contoh: bujang_3)">
+        <input type="text" id="inputNama" placeholder="Nama Lengkap (contoh: Budi (Bujang))">
+        <input type="text" id="inputFoto" placeholder="Link Foto (contoh: https://imgur.com/foto.jpg)">
+        <br>
+        <button onclick="tambahFinalis()">+ Tambah ke Database</button>
+    </div>
+
+    <h3>Daftar Finalis Saat Ini</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Vote</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tabelFinalis">
+            <!-- Data akan masuk ke sini -->
+        </tbody>
+    </table>
+
+    <script>
+        async function muatData() {
+            const res = await fetch('/api/finalis');
+            const data = await res.json();
+            const tabel = document.getElementById('tabelFinalis');
+            tabel.innerHTML = '';
+            
+            data.forEach(f => {
+                tabel.innerHTML += `
+                    <tr>
+                        <td>${f.id}</td>
+                        <td>${f.nama}</td>
+                        <td>${f.vote}</td>
+                        <td><button class="btn-hapus" onclick="hapusFinalis('${f.id}')">Hapus</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function tambahFinalis() {
+            const id = document.getElementById('inputId').value;
+            const nama = document.getElementById('inputNama').value;
+            const foto = document.getElementById('inputFoto').value;
+
+            if(!id || !nama || !foto) return alert("Semua kolom wajib diisi!");
+
+            await fetch('/api/admin/tambah', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, nama, foto })
+            });
+            alert("Berhasil ditambahkan!");
+            muatData(); // Refresh tabel
+        }
+
+        async function hapusFinalis(id) {
+            if(!confirm(`Yakin ingin menghapus ${id}?`)) return;
+
+            await fetch(`/api/admin/hapus/${id}`, { method: 'DELETE' });
+            alert("Berhasil dihapus!");
+            muatData(); // Refresh tabel
+        }
+
+        muatData(); // Muat otomatis saat dibuka
+    </script>
+</body>
+</html>
