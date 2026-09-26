@@ -71,13 +71,13 @@ app.post('/api/bayar-vote', async (req, res) => {
         custom_field2: jumlah_vote.toString()
     };
 
-    try {
+   try {
     const transaction = await snap.createTransaction(parameter);
     res.json({ token: transaction.token });
 } catch (error) {
     console.error(error);
-    // Ini akan menampilkan pesan error asli dari Midtrans ke layar Anda
-    res.status(500).json({ error: 'Gagal membuat pembayaran', pesanAsli: error.message });
+    // Ini akan mengirim pesan error asli dari Midtrans ke layar Anda
+    res.status(500).json({ error: 'Gagal membuat pembayaran', detailError: error.message });
 }
 });
 
