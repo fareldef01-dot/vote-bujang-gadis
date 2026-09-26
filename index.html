@@ -137,7 +137,8 @@
                         onClose: function() { alert("Pembayaran dibatalkan."); }
                     });
                 } else {
-                    alert("Gagal membuat transaksi: " + (data.error || 'Kesalahan server'));
+                    // Menampilkan detail error asli dari server
+                    alert("Gagal dari Midtrans:\n" + (data.detail || data.error || 'Kesalahan tidak dikenal'));
                 }
             } catch (error) {
                 console.error('Error:', error);

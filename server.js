@@ -57,7 +57,7 @@ app.get('/api/finalis', async (req, res) => {
     }
 });
 
-// --- 4. API: PEMBAYARAN MIDTRANS (DIPERBARUI & AMAN) ---
+// --- 4. API: PEMBAYARAN MIDTRANS (DENGAN DIAGNOSIS ERROR) ---
 app.post('/api/bayar-vote', async (req, res) => {
     try {
         await connectDB();
@@ -88,10 +88,12 @@ app.post('/api/bayar-vote', async (req, res) => {
         res.json({ token: transaction.token });
         
     } catch (error) {
-        console.error('Error Midtrans:', error.message);
+        console.error('Error Midtrans:', error);
+        // Mengirim detail error asli agar tampil di layar
+        const errorDetail = error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message;
         res.status(500).json({ 
-            error: 'Gagal membuat pembayaran dari Midtrans', 
-            detail: error.message 
+            error: 'Gagal dari Midtrans', 
+            detail: errorDetail 
         });
     }
 });
