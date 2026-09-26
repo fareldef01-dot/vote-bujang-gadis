@@ -1,0 +1,105 @@
+<!-- File: index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Bujang Gadis Berbayar</title>
+    <!-- Gunakan Tailwind untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script Midtrans Snap (Ganti dengan Client Key Anda!) -->
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-zJiOY0_TYLbWF0dy"></script>
+</head>
+<body class="bg-gray-100 p-10 font-sans">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-700">Pemilihan Bujang Gadis 2026</h1>
+        <p class="text-center mb-8">Dukung finalis favoritmu! 1 Vote = Rp 5.000</p>
+        
+        <!-- Wadah untuk menampilkan daftar finalis -->
+        <div id="finalis-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Finalis akan dimuat dari JavaScript di sini -->
+        </div>
+    </div>
+
+    <script>
+        const hargaPerVote = 5000;
+
+        // Fungsi mengambil data finalis dari Server
+        async function loadFinalis() {
+            const response = await fetch('/api/finalis');
+            const data = await response.json();
+            
+            const container = document.getElementById('finalis-container');
+            container.innerHTML = ''; // Bersihkan sebelum diisi
+
+            data.forEach(finalis => {
+                const card = `
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <img src="${finalis.foto}" alt="${finalis.nama}" class="w-32 h-32 mx-auto rounded-full mb-4">
+                        <h2 class="text-xl font-bold">${finalis.nama}</h2>
+                        <p class="text-gray-600 mb-4">Total Vote: <span class="font-bold text-blue-600 text-2xl">${finalis.vote}</span></p>
+                        
+                        <input type="number" id="jumlah-${finalis.id}" value="1" min="1" class="border p-2 w-20 text-center rounded mb-4" placeholder="Jml Vote">
+                        <br>
+                        <button onclick="prosesVote('${finalis.id}')" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-800 transition">
+                            Vote Sekarang
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // Fungsi saat tombol "Vote Sekarang" diklik
+        async function prosesVote(idFinalis) {
+            const jumlahVote = document.getElementById(`jumlah-${idFinalis}`).value;
+            const namaVoter = prompt("Masukkan Nama Anda (Boleh Kosong):") || "Anonim";
+
+            if (jumlahVote < 1) return alert("Jumlah vote minimal 1");
+
+            try {
+                // 1. Minta Token Pembayaran ke Backend
+                const response = await fetch('/api/bayar-vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_finalis: idFinalis,
+                        jumlah_vote: parseInt(jumlahVote),
+                        nama_voter: namaVoter
+                    })
+                });
+
+                const data = await response.json();
+
+                if(data.token) {
+                    // 2. Tampilkan Jendela Popup Pembayaran Midtrans
+                    window.snap.pay(data.token, {
+                        onSuccess: function(result){
+                            alert("Pembayaran berhasil! Vote akan segera ditambahkan.");
+                            loadFinalis(); // Refresh data
+                        },
+                        onPending: function(result){
+                            alert("Menunggu pembayaran Anda!");
+                        },
+                        onError: function(result){
+                            alert("Pembayaran gagal!");
+                        },
+                        onClose: function(){
+                            alert('Anda menutup jendela pembayaran sebelum menyelesaikan pembayaran.');
+                        }
+                    });
+                } else {
+                    alert("Gagal memproses pembayaran");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan sistem.");
+            }
+        }
+
+        // Muat data pertama kali web dibuka
+        loadFinalis();
+    </script>
+</body>
+</html>
