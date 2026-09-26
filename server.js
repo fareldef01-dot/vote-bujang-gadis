@@ -68,7 +68,9 @@ app.post('/api/bayar-vote', async (req, res) => {
         }
 
         const totalHarga = parseInt(jumlah_vote) * hargaPerVote;
-        const orderId = `VOTE-${id_finalis}-${Date.now()}`;
+// Membersihkan ID dari karakter khusus agar hanya huruf, angka, dan strip (-)
+const cleanId = id_finalis.replace(/[^a-zA-Z0-9]/g, '');
+const orderId = `VOTE-${cleanId}-${Date.now()}`;
 
         let parameter = {
             transaction_details: { 
