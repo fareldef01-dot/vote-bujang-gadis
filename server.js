@@ -10,7 +10,8 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // --- 1. KONEKSI DATABASE KHUSUS VERCEL (SERVERLESS) ---
-const MONGODB_URI = 'mongodb+srv://fareldef01_db_user:Farel12345@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
+// Link ini sudah menggunakan akun baru: adminvoting dan Password123
+const MONGODB_URI = 'mongodb+srv://adminvoting:Password123@cluster0.fshemrp.mongodb.net/votingdb?appName=Cluster0'; 
 
 // Cetakan Data
 const finalisSchema = new mongoose.Schema({
@@ -23,12 +24,12 @@ const Finalis = mongoose.models.Finalis || mongoose.model('Finalis', finalisSche
 
 // Fungsi jaminan koneksi agar tidak Time Out di Vercel
 const connectDB = async () => {
-    if (mongoose.connection.readyState >= 1) return; // Jika sudah konek, lewati
+    if (mongoose.connection.readyState >= 1) return; // Jika sudah terhubung, lewati
     
     console.log('Menghubungkan ke MongoDB...');
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
     
-    // Isi data awal jika masih kosong
+    // Isi data awal jika database masih kosong
     const jumlahData = await Finalis.countDocuments();
     if (jumlahData === 0) {
         await Finalis.insertMany([
@@ -36,6 +37,7 @@ const connectDB = async () => {
             { id: 'gadis_1', nama: 'Siti (Gadis)', vote: 15, foto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' },
             { id: 'bujang_2', nama: 'Rian (Bujang)', vote: 5, foto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' }
         ]);
+        console.log('Data awal berhasil dimasukkan!');
     }
 };
 
